@@ -36,7 +36,7 @@ def get_parser():
                         help='training related, pretrained model path')
     parser.add_argument('--lr', type=int, default=0.0001, help='hyperparameters, learning_rate')
     parser.add_argument('--keep_ckpt_max', type=int, default=20, help='the max num of saving models')
-    parser.add_argument('--max_epoch', type=int, default=200, help='the epoch of training models')
+    parser.add_argument('--max_epoch', type=int, default=10, help='the epoch of training models')
     return parser
 
 
@@ -77,10 +77,15 @@ def run_train():
     # 定义优化器
     optimizer = nn.Momentum(network.trainable_params(), learning_rate=args.lr, momentum=0.9)
     # 定义loss
-    loss_scale_manager = DynamicLossScaleManager(init_loss_scale=2 ** 22)
-    update_cell = loss_scale_manager.get_update_cell()
-    # 封装训练网络
-    train_network = nn.TrainOneStepWithLossScaleCell(network, optimizer, scale_sense=update_cell)
+    # 定义loss
+    if args.device_target == "CPU":
+        # CPU does not support/need DynamicLossScaleManager with NPU/GPU ops
+        train_network = nn.TrainOneStepCell(network, optimizer)
+    else:
+        loss_scale_manager = DynamicLossScaleManager(init_loss_scale=2 ** 22)
+        update_cell = loss_scale_manager.get_update_cell()
+        # 封装训练网络
+        train_network = nn.TrainOneStepWithLossScaleCell(network, optimizer, scale_sense=update_cell)
     model = Model(train_network, amp_level="O0")
     # 设置网络为训练模式
     train_network.set_train(True)

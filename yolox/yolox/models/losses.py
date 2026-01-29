@@ -100,8 +100,7 @@ class YOLOLossCell(nn.Cell):
         ious_in_boxes_matrix = F.cast(pre_fg_mask * ious_in_boxes_matrix, mindspore.float16)
         topk_ious, _ = P.TopK(sorted=True)(ious_in_boxes_matrix, self.n_candidate_k)
 
-        dynamic_ks = P.ReduceSum()(topk_ious, 2).astype(mindspore.int32).clip(xmin=1, xmax=total_num_anchors - 1,
-                                                                              dtype=mindspore.int32)
+        dynamic_ks = P.ReduceSum()(topk_ious, 2).astype(mindspore.int32).clip(1, total_num_anchors - 1)
 
         # (1, batch_size * gt_max, 2)
         dynamic_ks_indices = P.Stack(axis=1)((self.batch_iter, dynamic_ks.reshape((-1,))))

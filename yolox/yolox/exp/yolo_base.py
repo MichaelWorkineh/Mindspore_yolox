@@ -79,9 +79,12 @@ class YOLOXCB(Callback):
         cb_params = run_context.original_args()
         cur_epoch = cb_params.cur_epoch_num
         loss = cb_params.net_outputs
-        loss = "loss: %.4f, overflow: %s, scale: %s" % (float(loss[0].asnumpy()),
-                                                        bool(loss[1].asnumpy()),
-                                                        int(loss[2].asnumpy()))
+        if isinstance(loss, (tuple, list)):
+            loss = "loss: %.4f, overflow: %s, scale: %s" % (float(loss[0].asnumpy()),
+                                                            bool(loss[1].asnumpy()),
+                                                            int(loss[2].asnumpy()))
+        else:
+            loss = "loss: %.4f" % float(loss.asnumpy())
         self.logger.info(
             "epoch: %s epoch time %.2fs %s" % (cur_epoch, time.time() - self.epoch_start_time, loss))
 
@@ -106,9 +109,12 @@ class YOLOXCB(Callback):
             cb_params = run_context.original_args()
             cur_epoch = cb_params.cur_epoch_num
             loss = cb_params.net_outputs
-            loss = "loss: %.4f, overflow: %s, scale: %s" % (float(loss[0].asnumpy()),
-                                                            bool(loss[1].asnumpy()),
-                                                            int(loss[2].asnumpy()))
+            if isinstance(loss, (tuple, list)):
+                loss = "loss: %.4f, overflow: %s, scale: %s" % (float(loss[0].asnumpy()),
+                                                                bool(loss[1].asnumpy()),
+                                                                int(loss[2].asnumpy()))
+            else:
+                loss = "loss: %.4f" % float(loss.asnumpy())
             # self.logger.info("epoch: %s step: [%s/%s], %s, lr: %.6f, avg step time: %.2f ms" % (
             #     cur_epoch, cur_epoch_step, self.step_per_epoch, loss, self.lr[self.current_step],
             #     (time.time() - self.iter_time) * 1000 / self._per_print_times))
